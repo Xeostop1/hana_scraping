@@ -7,6 +7,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from webdriver_manager.chrome import ChromeDriverManager
 import csv
+from urllib.parse import urlparse, parse_qs
+import datetime
 
 # 전역 변수 설정 (사용자 입력값 저장)
 strtDepDay = ""
@@ -14,25 +16,34 @@ endDepDay = ""
 cntryCd = ""
 cityCd = ""
 file_name = ""
+params_dict = {}
 
 
 def submit():
-    global url, file_name
+    global url, file_name, params_dict
     try:
         url = entry1.get()
 
-        # URL이 필요한 정보를 모두 포함하고 있는지 확인합니다.
-        if "cntryCd=" in url and "strtDepDay=" in url:
-            cntryCd = url.split("cntryCd=")[1].split("&")[0]
-            strtDepDay = url.split("strtDepDay=")[1].split("&")[0]
-            file_name = cntryCd + "_" + strtDepDay + ".csv"
+        # URL 파싱
+        parsed_url = urlparse(url)
+
+        # 쿼리 스트링 파싱 (딕셔너리 형태로 반환)
+        params_dict = parse_qs(parsed_url.query)
+
+        # 필요한 정보(cntryCd, strtDepDay)가 있는지 확인합니다.
+        if "cntryCd" in params_dict and "strtDepDay" in params_dict:
+            cntryCd = params_dict["cntryCd"][0]
+            strtDepDay = params_dict["strtDepDay"][0]
+
+            # 현재 시간으로부터 타임스탬프 생성
+            timestamp_str = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+            file_name = f"{cntryCd}_{strtDepDay}_{timestamp_str}.csv"
+            
             print(f"파일 이름 설정 완료: {file_name}")
-        else:
-            raise ValueError(
-                "입력하신 URL이 필요한 정보(cntryCd, strtDepDay)을 포함하고 있지 않습니다.")
+
     except Exception as e:
         messagebox.showerror("URL 오류", str(e))
-        print("필요한 정보가 누락된 URL입니다.")
    
 
 
